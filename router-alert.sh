@@ -1,7 +1,7 @@
 #!/bin/sh
-wget -O nodes.json http://map.ffnw.de/nodelist_api/nodes.json
+#wget -O nodes.json http://map.ffnw.de/nodelist_api/nodes.json
 mydate=$(($(date +%s)-300))
-sed 's/\(lastseen.*[0-9]\)\.[0-9]*Z/\1Z/g;s/\(lastseen.*[0-9]\)\"/\1Z\"/g' nodes.json > nodes.json-lastseen
+sed 's/\(lastseen.*[0-9]\)\.[0-9]*Z/\1Z/g;s/\(lastseen.*[0-9]\)\"/\1Z\"/g' ../nodelist_api/nodes.json > nodes.json-lastseen
 jq-linux64 --arg Mydate $mydate '.nodes[]|
 select(.nodeinfo.owner.contact|tostring|contains("lrnzo@"))|
 select((.lastseen|strptime("%Y-%m-%dT%H:%M:%SZ")|mktime)<($Mydate|tonumber))|
