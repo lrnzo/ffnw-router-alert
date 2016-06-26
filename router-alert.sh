@@ -15,6 +15,7 @@ for i in xx0*; do
 	nodeid=$(grep nodeid $i | awk '{print $2}' | grep -oP '[^",]*')
 	pubv6=$(grep -oP '2a03[^"]*' $i)
 	mailsubject="Freifunkrouter $node nicht mehr erreichbaer"
-	echo "Hallo Freifunka,\n\nDein/Ihr Router $node ist seit mindestens als 5 Minuten\nnicht erreichbar. Hier einige Details, die dir/Ihnen helfen, dies zu ändern:\n\nurl:\thttp://map.ffnw.de/#!v:m;n:$nodeid\nipv6:\t$pubv6\n\nDies ist eine automatische benachrichtigung.\nLob und Kritik bitte an router-alert@ffnw.de" | mail -s "$mailsubject" $mailto
+	echo "Subject: $mailsubject\nFrom:alert@ffnw.de\nHallo Freifunka,\n\nDein/Ihr Router $node ist seit mindestens 5 Minuten\nnicht erreichbar. Hier einige Details, die dir/Ihnen helfen, dies zu ändern:\n\nurl:\thttp://map.ffnw.de/#!v:m;n:$nodeid\nipv6:\t$pubv6\n\nDies ist eine automatische benachrichtigung." | msmtp $mailto
+	#printf "To: <recipient>@domain.com\nFrom: <your-gmail-acccount>@gmail.com\nSubject: Email Test Using MSMTP\n\nHello there. This is email test from MSMTP."
 	rm $i
 	done
