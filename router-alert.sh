@@ -13,7 +13,7 @@ for i in xx0*; do
 	node=$(grep name $i|awk '{print $2}'|grep -oP '[^",]*')
 	nodeid=$(grep nodeid $i | awk '{print $2}' | grep -oP '[^",]*')
 	pubv6=$(grep -oP '2a03[^"]*' $i)
-	mailsubject="Freifunkrouter $node nicht mehr erreichbaer"
-	echo "Subject: $mailsubject\nFrom:alert@ffnw.de\nHallo Freifunka,\n\nDein/Ihr Router $node ist seit mindestens 5 Minuten\nnicht erreichbar. Hier einige Details, die dir/Ihnen helfen, dies zu ändern:\n\nurl:\thttp://map.ffnw.de/#!v:m;n:$nodeid\nipv6:\t$pubv6\n\nDies ist eine automatische benachrichtigung." | msmtp $mailto
+	mailsubject="Freifunkrouter $node nicht mehr erreichbar"
+	echo "To: $mailto\nFrom:alert@ffnw.de\nSubject: $mailsubject\nHallo Freifunka,\n\nDein/Ihr Router $node ist seit mindestens 5 Minuten\nnicht erreichbar. Hier einige Details, die dir/Ihnen helfen können, dies zu ändern:\n\nurl:\thttp://map.ffnw.de/#!v:m;n:$nodeid\nipv6:\t$pubv6\n\nDies ist eine automatische benachrichtigung." | msmtp $mailto
 	rm $i
 	done
