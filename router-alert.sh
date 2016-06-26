@@ -7,7 +7,9 @@ select(.nodeinfo.owner.contact|tostring|contains("lrnzo@"))|
 select((.lastseen|strptime("%Y-%m-%dT%H:%M:%SZ")|mktime)<($Mydate|tonumber))|
 {name: .nodeinfo.hostname, contact: .nodeinfo.owner.contact, lastseen: .lastseen, flags: .flags, v6: .nodeinfo.network.addresses, nodeid: .nodeinfo.node_id}' nodes.json-lastseen > failed-nodes
 csplit -s failed-nodes /"name"/ {*}
+rm xx00
 for i in xx0*; do
+	
 	mailto=$(grep -oP '[^"]*@[^"]*' $i)
 	replyto=lrnzo@osnabrueck.freifunk.net
 	node=$(grep name $i|awk '{print $2}'|grep -oP '[^",]*')
