@@ -1,4 +1,5 @@
-#!/bin/sh we need time five minutes ago and we need it as integer (number of seconds since 1970-01-01:00:00:00) because we want to compare it with the present farther down
+#!/bin/sh
+#we need time five minutes ago and we need it as integer (number of seconds since 1970-01-01:00:00:00) because we want to compare it with the present farther down
 mydate=$(($(date +%s)-300))
 
 #many of the timestamps in the lastseen fields in nodes.json contain milliseconds and i didn't find a way to parse them correctly with jq, so i simply cut out the milliseconds and store the modified data to ./nodes.json-lastseen
