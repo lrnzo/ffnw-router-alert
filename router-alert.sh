@@ -15,6 +15,11 @@ select((.nodeinfo.node_id|[.]|inside($nodeid)))|
 select((.lastseen|strptime("%Y-%m-%dT%H:%M:%SZ")|mktime)<($Mydate|tonumber))|
 {name: .nodeinfo.hostname, contact: .nodeinfo.owner.contact, lastseen: .lastseen, flags: .flags, v6: .nodeinfo.network.addresses, nodeid: .nodeinfo.node_id}' nodes.json-lastseen > failed-nodes
 
+#"measure" if there any failed nodes
+numfailednodes=$(wc -l failed-nodes|awk '{print $1}')
+
+#if so, do your magic
+if [ $numfailednodes !=  "0" ]; then
 #separate the data of the potentially failed nodes by splitting up the .failed-nodes into many files xx00, xx01, xx02 ,...
 csplit -s failed-nodes /"name"/ {*}
 
@@ -23,12 +28,19 @@ rm xx00
 
 #generate an email out of every file matching xx*, send it to he node owner and delete the no longer needed xx<this><node>
 for i in xx*; do
-	nodeid=$(grep nodeid $i | awk '{print $2}' | grep -oP '[^",]*')
+	thisnodeid=$(grep nodeid $i | awk '{print $2}' | grep -oP '[^",]*')
+echo $thisnodeid
 	mailto=$(grep -oP '[^"]*@[^"]*' $i)
 	replyto=lrnzo@osnabrueck.freifunk.net
 	node=$(grep name $i|awk '{print $2}'|grep -oP '[^",]*')
 	pubv6=$(grep -oP '2a03[^"]*' $i)
-	mailsubject="Freifunkrouter $node (ID $nodeid) nicht mehr erreichbar?"
-	echo "To: $mailto\nFrom:alert@ffnw.de\nSubject: $mailsubject\nHallo Freifunka,\n\nDein/Ihr Router $node ist seit mindestens 5 Minuten\nnicht erreichbar. Hier einige Details, die dir/Ihnen helfen können, dies zu ändern:\n\nurl:\thttp://map.ffnw.de/#!v:m;n:$nodeid\nipv6:\t$pubv6\n\nDies ist eine automatische Benachrichtigung." | msmtp $mailto
+	mailsubject="Freifunkrouter $node (ID $thisnodeid) nicht mehr erreichbar?"
+#	echo "To: $mailto\nFrom:alert@ffnw.de\nSubject: $mailsubject\nHallo Freifunka,\n\nDein/Ihr Router $node ist seit mindestens 5 Minuten\nnicht erreichbar. Hier einige Details, die dir/Ihnen helfen können, dies zu ändern:\n\nurl:\thttp://map.ffnw.de/#!v:m;n:$nodeid\nipv6:\t$pubv6\n\nDies ist eine automatische Benachrichtigung." | msmtp $mailto
+	echo mailnow
+	jq-linux64 --arg Nodeid $thisnodeid '.[]| if (.nodeid|tostring==$Nodeid) or (.alertme!=true) then (.alertme |= false) else (.alertme |= true) end' alert.json | jq -s . > alert.json.tmp
+	mv alert.json.tmp alert.json
 	rm $i
 done
+	#	   --arg nodeid 2b05234 '.[]| if (.nodeid==$nodeid) then (.alertme |= false) else (.alertme |= true) end' alert.json
+rm failed-nodes
+fi
