@@ -30,7 +30,6 @@ if [ $numfailednodes !=  "0" ]; then
 	for i in xx*; do
 		nodeid=$(grep nodeid $i | awk '{print $2}' | grep -oP '[^",]*')
 		mailto=$(grep -oP '[^"]*@[^"]*' $i)
-		replyto=lrnzo@osnabrueck.freifunk.net
 		node=$(grep name $i|awk '{print $2}'|grep -oP '[^",]*')
 		pubv6=$(grep -oP '2a03[^"]*' $i)
 		lastseen=$(( ($(date +%s) -$(date -d $(grep lastseen $i|awk '{print $2}'|grep -oP '[^",]*') +%s))/60 ))
