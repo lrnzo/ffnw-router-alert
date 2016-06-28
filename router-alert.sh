@@ -1,6 +1,6 @@
 #!/bin/sh
 #we need time five minutes ago and we need it as integer (number of seconds since 1970-01-01:00:00:00) because we want to compare it with the present farther down
-mydate=$(($(date +%s)-300))
+mydate=$(($(date +%s)-600))
 
 #many of the timestamps in the lastseen fields in nodes.json contain milliseconds and i didn't find a way to parse them correctly with jq, so i simply cut out the milliseconds and store the modified data to ./nodes.json-lastseen
 sed 's/\(lastseen.*[0-9]\)\.[0-9]*Z/\1Z/g;s/\(lastseen.*[0-9]\)\"/\1Z\"/g' ../nodelist_api/nodes.json > nodes.json-lastseen
@@ -28,15 +28,19 @@ if [ $numfailednodes !=  "0" ]; then
 
 	#generate an email out of every file matching xx*, send it to he node owner and delete the no longer needed xx<this><node>
 	for i in xx*; do
-		thisnodeid=$(grep nodeid $i | awk '{print $2}' | grep -oP '[^",]*')
+		nodeid=$(grep nodeid $i | awk '{print $2}' | grep -oP '[^",]*')
 		mailto=$(grep -oP '[^"]*@[^"]*' $i)
 		replyto=lrnzo@osnabrueck.freifunk.net
 		node=$(grep name $i|awk '{print $2}'|grep -oP '[^",]*')
 		pubv6=$(grep -oP '2a03[^"]*' $i)
-		mailsubject="Freifunkrouter $node (ID $thisnodeid) nicht mehr erreichbar?"
-		echo "To: $mailto\nFrom:alert@ffnw.de\nSubject: $mailsubject\nHallo Freifunka,\n\nDein/Ihr Router $node ist seit mindestens 5 Minuten\nnicht erreichbar. Hier einige Details, die dir/Ihnen helfen können, dies zu ändern:\n\nurl:\thttp://map.ffnw.de/#!v:m;n:$nodeid\nipv6:\t$pubv6\n\nDies ist eine automatische Benachrichtigung." | msmtp $mailto
-		jq-linux64 --arg Nodeid $thisnodeid '.[]| if (.nodeid|tostring==$Nodeid) or (.alertme!=true) then (.alertme |= false) else (.alertme |= true) end' alert.json | jq -s . > alert.json.tmp
+		lastseen=$(( ($(date +%s) -$(date -d $(grep lastseen $i|awk '{print $2}'|grep -oP '[^",]*') +%s))/60 ))
+		mailsubject="Ausfall Router $node ($nodeid)"
+		echo "To: $mailto\nFrom:alert@ffnw.de\nSubject: $mailsubject\nHallo Freifunka,\n\nDer Router $node ist seit $lastseen Minuten\nnicht erreichbar. Hier einige Details, die vielleicht hilfreich sind, das zu beheben:\n\nurl:\thttp://map.ffnw.de/#!v:m;n:$nodeid\nipv6:\t$pubv6\n\nDies ist eine automatische Benachrichtigung." | msmtp $mailto
+		#for this node set the alertme field in alert.json to false. so we do not spam people. the alert.json gets refreshed regularly so people DO get informed repeatedly. see crontab -l for the interval
+		jq-linux64 --arg Nodeid $nodeid '.[]| if (.nodeid|tostring==$Nodeid) or (.alertme!=true) then (.alertme |= false) else (.alertme |= true) end' alert.json | jq -s . > alert.json.tmp
 		mv alert.json.tmp alert.json
 		rm $i
 	done
 fi
+#do mydate=$(date -d $i +%s); echo $(( ($(date +%s)-$mydate) / 60 ))
+
